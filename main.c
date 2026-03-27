@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -29,7 +28,7 @@ struct Vehiculo {
     int tiene_pasajeros;        // Si tiene un chofer pero no pasajeros 0,
                                 // si el pasajero es el chofer 1
     int num_adultos;            // Número de pasajeros adultos
-    int num_tercera_edad;       // Número de pasajeros tercera edad
+ int num_tercera_edad;       // Número de pasajeros tercera edad
     int tipo_pasaje_adultos;    // 0=Primera/VIP, 1=Turista/Ejecutiva
     int tipo_pasaje_tercera_edad; // 0=Primera/VIP, 1=Turista/Ejecutiva
     int peso;                   // Peso en kg (excepto carga que es toneladas)
@@ -162,7 +161,7 @@ int validarPlaca(const char *placa);
 int validarVehiculo(struct Vehiculo *v);
 
 // --- Funciones de Simulaciòn ---
-void iniciarSimulacion(struct Simulacion *sim);
+void iniciarSimulacion(FILE *in, struct Simulacion *sim);
 int esEmergencia(struct Ferry *ferry, struct Simulacion *sim);
 int cabeVehiculo(struct Ferry *ferry, struct Simulacion *sim);
 void cargarVehiculo(struct Ferry *ferry, struct Simulacion *sim);
@@ -170,7 +169,7 @@ void descargarVehiculo(struct Ferry *ferry, struct Simulacion *sim);
 int hayVehiculosEnCola(struct Ferry *ferry, struct Simulacion *sim, int hora_carga);
 int estaCargando(struct Ferry *ferry, int *hora_carga);
 int puedeViajar(struct Ferry *ferry, struct Simulacion *sim, int hora_carga);
-void iniciarViaje(struct Ferry *ferry, struct Simulacion *sim);
+void iniciarViaje(FILE *in, struct Ferry *ferry, struct Simulacion *sim);
 int terminarSimulacion(struct Ferry *ferry, struct Simulacion *sim, int hora_carga);
 void actualizarEstadosFerrys(struct Simulacion *sim);
 void cargarVehiculoEmergencia(struct Ferry *ferry, struct Simulacion *sim, 
@@ -183,8 +182,10 @@ void cargarVehiculoNormal(struct Ferry *ferry, struct Simulacion *sim,
 
 // --- Funciones de Estadisticas ---
 void generarReporteViaje(struct Ferry *ferry, struct Simulacion *sim);
+void generarReporteViajeArchivo(FILE *in, struct Ferry *ferry, struct Simulacion *sim);
 void actualizarEstadisticasEspera(struct Simulacion *sim);
 void calcularEstadisticasFinales(struct Simulacion *sim);
+void imprimirEstadisticasArchivo(FILE *in, struct Simulacion *sim);
 void imprimirEstadisticas(struct Simulacion *sim);
 float calcularIngresoVehiculo(struct Vehiculo *v, int tipoFerry);
 void actualizarEstadisticasBajada(struct Ferry *ferry, struct Vehiculo *bajado);
@@ -197,6 +198,7 @@ void actualizarEstadisticasBajada(struct Ferry *ferry, struct Vehiculo *bajado);
 int main() {
     
     // Inicializar simulación
+    FILE *in = fopen("proy_1.out", "a");
     struct Simulacion simulacion;
     inicializarSimulacion(&simulacion);
     
@@ -211,8 +213,9 @@ int main() {
         simulacion.tiempo_actual_minutos = horaMilitarAMinutos(simulacion.hora_inicio);
     }
 
-    iniciarSimulacion(&simulacion);
+    iniciarSimulacion(in,&simulacion);
     
+    fclose(in);
     // Aquí continuaría la simulación...
     
     return 0;
@@ -793,7 +796,7 @@ int validarVehiculo(struct Vehiculo *v) {
 //=============================================================================
 // FUNCIÓN PRINCIPAL DE SIMULACIÓN REFACTORIZADA
 //=============================================================================
-void iniciarSimulacion(struct Simulacion *sim) {
+void iniciarSimulacion(FILE *in, struct Simulacion *sim) {
     int band = 1;
     
     while (band) {
@@ -812,7 +815,7 @@ void iniciarSimulacion(struct Simulacion *sim) {
             //printf("Hay ferry cargando...\n");
             // Verificar si puede zarpar
             if (puedeViajar(ferry_actual, sim, hora_carga)) {
-                iniciarViaje(ferry_actual, sim);
+                iniciarViaje(in,ferry_actual, sim);
                 printf("Intentando zarpar...\n");
                 printf("🚢 Ferry %s ZARPÓ a las %d\n", ferry_actual->nombre, hora_carga);
             } 
@@ -867,10 +870,10 @@ void iniciarSimulacion(struct Simulacion *sim) {
         //system("sleep 1");
         //printf("Esperando...\n");
     }
-    
+    imprimirEstadisticas(sim);
     // Al finalizar, calcular e imprimir estadísticas finales
     calcularEstadisticasFinales(sim);
-    imprimirEstadisticas(sim);
+    imprimirEstadisticasArchivo(in, sim);
 }
 
 int cabeVehiculo(struct Ferry *ferry, struct Simulacion *sim) {
@@ -938,9 +941,10 @@ int puedeViajar(struct Ferry *ferry, struct Simulacion *sim, int hora_carga) {
 //=============================================================================
 // FUNCIÓN iniciarViaje
 //=============================================================================
-void iniciarViaje(struct Ferry *ferry, struct Simulacion *sim) {
+void iniciarViaje(FILE *in, struct Ferry *ferry, struct Simulacion *sim) {
     // 1. Generar reporte del viaje
     generarReporteViaje(ferry, sim);
+    generarReporteViajeArchivo(in, ferry, sim);
     
     // 2. Actualizar estadísticas globales
     sim->total_vehiculos_dia += ferry->num_vehiculos_abordo;
@@ -1202,6 +1206,37 @@ int terminarSimulacion(struct Ferry *ferry, struct Simulacion *sim, int hora_car
 //=============================================================================
 // NUEVA FUNCIÓN: generarReporteViaje
 //=============================================================================
+void generarReporteViajeArchivo(FILE *in, struct Ferry *ferry, struct Simulacion *sim) {
+    fprintf(in,"\n");
+    fprintf(in,"══════════════════════════════════════════════════════════\n");
+    fprintf(in,"🚢 VIAJE Nro. %d - Ferry: %s\n", 
+           ferry->total_viajes_realizados + 1, ferry->nombre);
+    fprintf(in,"──────────────────────────────────────────────────────────\n");
+    fprintf(in,"  📊 Número de vehículos: %d\n", ferry->num_vehiculos_abordo);
+    fprintf(in,"  👥 Pasajeros: %d (mayores de 60: %d)\n", 
+           ferry->pasajeros_actuales, ferry->pasajeros_mayores_actuales);
+    fprintf(in,"  ⚖️  Peso total: %.2f toneladas\n", ferry->peso_actual_toneladas);
+    fprintf(in,"  💰 Ingreso: %.2f BsF.\n", ferry->total_ingresos);
+    fprintf(in,"──────────────────────────────────────────────────────────\n");
+    fprintf(in,"  📋 Vehículos transportados:\n");
+    
+    for (int i = 0; i < ferry->num_vehiculos_abordo; i++) {
+        char *tipo_str;
+        switch(ferry->vehiculos_a_bordo[i].tipo_vehiculo) {
+            case 0: tipo_str = "liviano"; break;
+            case 1: tipo_str = "rústico"; break;
+            case 2: tipo_str = "van/microbus"; break;
+            case 3: tipo_str = "carga"; break;
+            case 4: tipo_str = "ambulancia"; break;
+            case 5: tipo_str = "bomberos"; break;
+            case 6: tipo_str = "policía"; break;
+            default: tipo_str = "desconocido";
+        }
+        fprintf(in,"    %d. ID: %s - Tipo: %s\n", 
+               i + 1, ferry->vehiculos_a_bordo[i].placa, tipo_str);
+    }
+    fprintf(in,"══════════════════════════════════════════════════════════\n\n");
+}
 void generarReporteViaje(struct Ferry *ferry, struct Simulacion *sim) {
     printf("\n");
     printf("══════════════════════════════════════════════════════════\n");
@@ -1265,6 +1300,33 @@ void calcularEstadisticasFinales(struct Simulacion *sim) {
     sim->total_pasajeros_no_trasladados = pasajeros_en_cola;
 }
 
+void imprimirEstadisticasArchivo(FILE *in, struct Simulacion *sim) {
+    fprintf(in,"\n");
+    fprintf(in,"══════════════════════════════════════════════════════════\n");
+    fprintf(in,"📊 ESTADÍSTICAS FINALES DEL DÍA\n");
+    fprintf(in,"──────────────────────────────────────────────────────────\n");
+    fprintf(in,"  🚗 Total vehículos transportados: %d\n", sim->total_vehiculos_dia);
+    fprintf(in,"  👥 Total pasajeros transportados: %d\n", sim->total_pasajeros_dia);
+    fprintf(in,"  💰 Total ingresos del día: %.2f BsF.\n", sim->total_ingresos_dia);
+    fprintf(in,"  ⏳ Pasajeros no trasladados: %d\n", sim->total_pasajeros_no_trasladados);
+    
+    // Aquí deberías calcular el vehículo más frecuente
+    fprintf(in,"  🚙 Vehículo más frecuente: %s\n", "liviano (por implementar)");
+    
+    fprintf(in,"  📈 Máxima espera: %d vehículos a las %d\n", 
+           sim->max_vehiculos_espera, sim->hora_max_vehiculos_espera);
+    
+    fprintf(in,"──────────────────────────────────────────────────────────\n");
+    fprintf(in,"  📊 VIAJES POR FERRY:\n");
+    for (int i = 0; i < MAX_FERRIES; i++) {
+        fprintf(in,"    • %s: %d viajes, %d vehículos, %d pasajeros\n",
+               sim->ferrys[i].nombre,
+               sim->ferrys[i].total_viajes_realizados,
+               sim->ferrys[i].total_vehiculos_transportados,
+               sim->ferrys[i].total_pasajeros_transportados);
+    }
+    fprintf(in,"══════════════════════════════════════════════════════════\n\n");
+}
 void imprimirEstadisticas(struct Simulacion *sim) {
     printf("\n");
     printf("══════════════════════════════════════════════════════════\n");

@@ -1,0 +1,15 @@
+1- El orden de carga esta predeterminado en 1, 2, 3
+
+2- El tiempo maximo de espera esta por defecto en la cantidad de vehiculos  - 1 ademas de que la hora es justo despues del primer vehiculo cargado
+
+3- Crear las funciones para imprimir en el archivo de salida
+
+4- Debo realizar un archivo de cargar donde se compruebe el ajuste de cola para vehiculos de emergencia
+
+5- Debo crear un archivo con mas de 1000 vehiculos
+
+6- Eliminar la sobre informacion de los mensajes de salida
+
+7- DIse;ar una interfaz amigable para el progrma
+
+8- Gestionar el sistema de documentacion Doxygen
