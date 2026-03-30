@@ -13,3 +13,19 @@
 7- DIse;ar una interfaz amigable para el progrma
 
 8- Gestionar el sistema de documentacion Doxygen
+
+9- Actualmente se me esta generando la incertidumbre de como manejar las estadisticas por la naturaleza del programa quiero colocar en el reporte cual porque decidi abrir una vez, registrar y cerrar al final, tambien dejare en comentario la linea //fflush diciendo que seria una buena practica pero por desconocimiento del uso permitido de esta funcion lo deje asi (tengo que verificar la integridad de uso de esta herramienta)
+
+9/solucion- void registrar_viaje(FILE *f, Viaje *v) {
+    fprintf(f, "Viaje #%d | Pasajeros: %d\n", v->id, v->pasajeros);
+    
+    // fflush(f);  // OP: Escritura inmediata en disco.
+    // Descomentar si se requiere garantía de persistencia ante fallos.
+    // No afecta la memoria estática (fflush trabaja con buffer interno de FILE).
+    // Para este proyecto, lo dejamos comentado por simplicidad y rendimiento,
+    // ya que fclose() al final del programa garantiza la escritura completa.
+}
+
+10- Actualmente tengo un programa con respecto a los vehiculos de prioridad, resulta que la simulacion aprata los vehiculos en dos colas dependiento su pasaje, esto es un problema ya que los que tienen prioridad deben ingresar al ferry que este cargando en el momento que lleguen, es decir, si esta cargando un ferry express pero tiene pasaje tradicional (por ende deberia estar en la cola tradicional) tiene que ingrezar al ferry express. 
+
+10/solucion-- colasEspera.promt

@@ -165,7 +165,6 @@ void iniciarSimulacion(FILE *in, struct Simulacion *sim);
 int esEmergencia(struct Ferry *ferry, struct Simulacion *sim);
 int cabeVehiculo(struct Ferry *ferry, struct Simulacion *sim);
 void cargarVehiculo(struct Ferry *ferry, struct Simulacion *sim);
-void descargarVehiculo(struct Ferry *ferry, struct Simulacion *sim);
 int hayVehiculosEnCola(struct Ferry *ferry, struct Simulacion *sim, int hora_carga);
 int estaCargando(struct Ferry *ferry, int *hora_carga);
 int puedeViajar(struct Ferry *ferry, struct Simulacion *sim, int hora_carga);
