@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(pwd)"
+BIN="flota"
+SRC="main.c"
+RESULTS_DIR="test/results"
+
+echo "Compilando ${SRC}..."
+if ! gcc -std=c11 -O2 -Wall -Wextra -o "$BIN" "$SRC" ; then
+  echo "Compilación fallida." >&2
+  exit 1
+fi
+
+mkdir -p "$RESULTS_DIR"
+
+for d in test/*/ ; do
+  # Saltar si no es directorio
+  [ -d "$d" ] || continue
+  INFILE="$d/proy1.in"
+  if [ ! -f "$INFILE" ]; then
+    echo "Aviso: $INFILE no existe, saltando"
+    continue
+  fi
+
+  NAME="$(basename "$d")"
+  echo "\n=== Ejecutando test: $NAME ==="
+
+  # Copiar entrada a la raíz con el nombre esperado por el programa
+  cp "$INFILE" "$ROOT_DIR/proy1.in"
+
+  # Asegurar salida limpia
+  rm -f "$ROOT_DIR/proy_1.out"
+
+  START_NS=$(date +%s%N)
+  if ! ./$BIN ; then
+    echo "Ejecución fallida para $NAME" >&2
+    # guardar salida parcial
+  fi
+  END_NS=$(date +%s%N)
+
+  DURATION_MS=$(( (END_NS - START_NS) / 1000000 ))
+
+  OUT_DEST="$RESULTS_DIR/${NAME}_proy_1.out"
+  TIME_DEST="$RESULTS_DIR/${NAME}_time.txt"
+
+  # Mover salida generada por el programa
+  if [ -f "$ROOT_DIR/proy_1.out" ]; then
+    mv "$ROOT_DIR/proy_1.out" "$OUT_DEST"
+  else
+    echo "Aviso: proy_1.out no generado por la ejecución" > "$OUT_DEST"
+  fi
+
+  echo "duration_ms=${DURATION_MS}" > "$TIME_DEST"
+  echo "input: $INFILE" >> "$TIME_DEST"
+  echo "output: $OUT_DEST" >> "$TIME_DEST"
+
+  echo "Test $NAME completado: ${DURATION_MS} ms -> $OUT_DEST"
+
+done
+
+# Limpieza: quitar proy1.in temporal
+rm -f "$ROOT_DIR/proy1.in"
+
+echo "\nAll tests finished. Results in $RESULTS_DIR"

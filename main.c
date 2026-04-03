@@ -187,8 +187,6 @@ int puedeViajar(struct Simulacion *sim, int ferry_idx, int hora_actual);
 void iniciarViaje(FILE *in, struct Simulacion *sim, int ferry_idx);
 int terminarSimulacion(struct Simulacion *sim, int ferry_idx, int hora_actual);
 void actualizarEstadosFerrys(struct Simulacion *sim);
-
-
 // --- Funciones de Estadisticas ---
 void generarReporteViaje(struct Simulacion *sim, int ferry_idx);
 void generarReporteViajeArchivo(FILE *in, struct Simulacion *sim, int ferry_idx);
@@ -239,7 +237,11 @@ int main() {
 //                      Funciones de Inicialización
 // -----------------------------------------------------------------------------
 
-// Función para inicializar toda la simulación
+/**
+ * @brief Inicializa la estructura principal de la simulación.
+ * @param sim Puntero a la estructura `Simulacion` a inicializar.
+ * @return void
+ */
 void inicializarSimulacion(struct Simulacion *sim) {
     // Inicializar todos los ferrys
     inicializarTodosFerrys(sim->ferrys);
@@ -264,14 +266,23 @@ void inicializarSimulacion(struct Simulacion *sim) {
     sim->hora_max_vehiculos_espera = 0;
 }
 
-// Función para inicializar todos los ferrys
+/**
+ * @brief Inicializa todos los `Ferry` del arreglo.
+ * @param ferrys Arreglo de `Ferry` de tamaño `MAX_FERRIES`.
+ * @return void
+ */
 void inicializarTodosFerrys(struct Ferry ferrys[MAX_FERRIES]) {
     for (int i = 0; i < MAX_FERRIES; i++) {
         inicializarFerry(&ferrys[i], i + 1);  // i+1 porque los IDs son 1,2,3
     }
 }
 
-// Función para inicializar un ferry con sus datos específicos
+/**
+ * @brief Inicializa un `Ferry` con parámetros predeterminados según su id.
+ * @param ferry Puntero al `Ferry` a inicializar.
+ * @param id Identificador del ferry (1..3).
+ * @return void
+ */
 void inicializarFerry(struct Ferry *ferry, int id) {
     // Primero, limpiar toda la estructura (poner en 0)
     //memset(ferry, 0, sizeof(struct Ferry));
@@ -331,7 +342,11 @@ void inicializarFerry(struct Ferry *ferry, int id) {
     ferry->total_ingresos = 0.0;
 }
 
-// Función para inicializar una cola vacía
+/**
+ * @brief Inicializa una `ColaVehiculos` en estado vacío.
+ * @param cola Puntero a la cola a inicializar.
+ * @return void
+ */
 void inicializarCola(struct ColaVehiculos *cola) {
     cola->frente = 0;
     cola->final = 0;  // -1 indica que no hay elementos
@@ -342,19 +357,32 @@ void inicializarCola(struct ColaVehiculos *cola) {
 //                      Funciones de Cola de Vehículos
 // -----------------------------------------------------------------------------
 
-// Función para verificar si la cola está vacía
+/**
+ * @brief Comprueba si la `ColaVehiculos` está vacía.
+ * @param cola Puntero a la cola a comprobar.
+ * @return 1 si la cola está vacía, 0 en caso contrario.
+ */
 int colaVacia(struct ColaVehiculos *cola) {
     return cola->cantidad == 0;
 }
 
-// Función para verificar si la cola está llena
+/**
+ * @brief Comprueba si la `ColaVehiculos` está llena.
+ * @param cola Puntero a la cola a comprobar.
+ * @return 1 si la cola está llena, 0 en caso contrario.
+ */
 int colaLlena(struct ColaVehiculos *cola) {
     return cola->cantidad >= MAX_VEHICULOS_COLA;
 }
 
 //================Cola de todos los vehiculos=====================
 
-// Encolar un nuevo vehículo (siempre al final)
+/**
+ * @brief Encola un nuevo vehículo al final de la cola general.
+ * @param cola Puntero a la `ColaVehiculos`.
+ * @param nuevo Vehículo a encolar.
+ * @return 1 si se encoló correctamente, 0 si la cola estaba llena.
+ */
 int encolar_nuevo(struct ColaVehiculos *cola, struct Vehiculo nuevo) {
     if (cola->cantidad == MAX_VEHICULOS_COLA) {
         return 0;  // Cola llena
@@ -370,7 +398,18 @@ int encolar_nuevo(struct ColaVehiculos *cola, struct Vehiculo nuevo) {
     return 1;
 }
 
-// Buscar el próximo vehículo activo según criterios (sin modificar índices)
+/**
+ * @brief Busca el índice del próximo vehículo activo en una cola según criterios.
+ * @param cola Puntero a la `ColaVehiculos` donde se busca.
+ * @param tipo_ferry_buscado Tipo de ferry buscado (-1 para cualquiera).
+ * @param prioridad_emergencia Si es 1, prioriza vehículos de emergencia.
+ * @return Índice dentro del arreglo `cola->elementos` del vehículo encontrado,
+ *         o -1 si no hay vehículos activos que cumplan los criterios.
+ *
+ * Descripción (español): Recorre la cola circular respetando el orden sin
+ * modificar `frente` o `final`. Primero busca emergencias (si aplica), luego
+ * vehículos del tipo solicitado y finalmente cualquier vehículo activo.
+ */
 int buscar_proximo_vehiculo(struct ColaVehiculos *cola, int tipo_ferry_buscado, int prioridad_emergencia) {
     if (cola->cantidad == 0) return -1;
     
@@ -412,6 +451,18 @@ int buscar_proximo_vehiculo(struct ColaVehiculos *cola, int tipo_ferry_buscado, 
 }
 
 // Función para asignar un vehículo a un ferry (desencolar virtual)
+/**
+ * @brief Asigna (virtualmente) un vehículo de la cola a un ferry.
+ * @param cola Puntero a la `ColaVehiculos` de donde se tomará el vehículo.
+ * @param tipo_ferry Tipo de ferry para el que se busca el vehículo.
+ * @param asignado Puntero donde se copiará el vehículo asignado.
+ * @param timestamp Marca de tiempo (minutos) de la asignación.
+ * @return 1 si se asignó un vehículo, 0 si no había vehículos disponibles.
+ *
+ * Descripción (español): Busca el próximo vehículo (priorizando emergencias)
+ * y marca su `activo` como 0 para indicar que fue asignado, además de fijar
+ * `timestamp_asignacion`.
+ */
 int asignar_a_ferry(struct ColaVehiculos *cola, int tipo_ferry, struct Vehiculo *asignado, int timestamp) {
     int indice = buscar_proximo_vehiculo(cola, tipo_ferry, 1);  // Prioridad emergencias
     
@@ -430,7 +481,14 @@ int asignar_a_ferry(struct ColaVehiculos *cola, int tipo_ferry, struct Vehiculo 
 //                 Funciones de Procesamiento de Archivo y Datos
 // -----------------------------------------------------------------------------
 
-// 2.1 FUNCIÓN COMPLETA PARA PROCESAR ARCHIVO
+/**
+ * @brief Procesa el archivo de entrada completo y encola los vehículos leídos.
+ * @param nombre_archivo Ruta al archivo de entrada (ej. "proy1.in").
+ * @param cola_todos_vehiculos Puntero a la cola donde se almacenan todos los vehículos.
+ * @param orden_carga Array (3 elementos) que recibirá el orden de carga de ferrys.
+ * @param hora_inicio Puntero donde se almacenará la hora del primer vehículo leído.
+ * @return Número de vehículos leídos y encolados, 0 en caso de error.
+ */
 int procesarArchivoCompleto(const char *nombre_archivo, 
                             struct ColaVehiculos *cola_todos_vehiculos,
                             int orden_carga[MAX_FERRIES],
@@ -546,7 +604,11 @@ int procesarArchivoCompleto(const char *nombre_archivo,
     return contador_vehiculos;  // Retornar número de vehículos leídos
 }
 
-// Función para procesar un vehículo leído del archivo
+/**
+ * @brief Calcula campos derivados de un `Vehiculo` leído (tipo, emergencia, peso_toneladas, total_pasajeros).
+ * @param v Puntero al `Vehiculo` a procesar.
+ * @return void
+ */
 void procesarVehiculo(struct Vehiculo *v) {
     int temp = v->codigo;
     int c1 = temp / 100;
@@ -602,14 +664,22 @@ void procesarVehiculo(struct Vehiculo *v) {
 //                      Funciones Utilitarias de Tiempo
 // -----------------------------------------------------------------------------
 
-// Función para convertir hora militar (ej: 830) a minutos desde medianoche
+/**
+ * @brief Convierte una hora en formato militar (HHMM) a minutos desde medianoche.
+ * @param hora_militar Hora en formato HHMM (ej: 830 para 08:30).
+ * @return Minutos desde medianoche.
+ */
 int horaMilitarAMinutos(int hora_militar) {
     int horas = hora_militar / 100;
     int minutos = hora_militar % 100;
     return horas * 60 + minutos;
 }
 
-// Función para convertir minutos a hora militar
+/**
+ * @brief Convierte minutos desde medianoche a hora en formato militar (HHMM).
+ * @param minutos Minutos desde medianoche.
+ * @return Hora en formato HHMM.
+ */
 int minutosAHoraMilitar(int minutos) {
     int horas = minutos / 60;
     int mins = minutos % 60;
@@ -622,7 +692,11 @@ int minutosAHoraMilitar(int minutos) {
 
 // 2.2 FUNCIONES DE VALIDACIÓN COMPLETAS
 
-//Validar rangos de COD
+/**
+ * @brief Valida la estructura del código del vehículo (3 dígitos: tipo, región, flag).
+ * @param codigo Código entero de 3 dígitos.
+ * @return 1 si el código es válido, 0 si es inválido.
+ */
 int validarCod(int codigo){
   
   int temp = codigo;
@@ -651,7 +725,11 @@ int validarCod(int codigo){
   return 1;
 }
 
-// Validar que la hora militar sea correcta (0000 a 2359)
+/**
+ * @brief Valida que una hora militar esté en el rango 0000-2359.
+ * @param hora Hora en formato HHMM.
+ * @return 1 si válida, 0 si inválida.
+ */
 int validarHoraMilitar(int hora) {
     int horas = hora / 100;
     int minutos = hora % 100;
@@ -671,7 +749,12 @@ int validarHoraMilitar(int hora) {
     return 1;
 }
 
-// Validar rangos de pasajeros
+/**
+ * @brief Valida los rangos de pasajeros por vehículo.
+ * @param num_adultos Número de pasajeros adultos.
+ * @param num_tercera_edad Número de pasajeros de tercera edad.
+ * @return 1 si los valores son válidos, 0 si hay error.
+ */
 int validarPasajeros(int num_adultos, int num_tercera_edad) {
     // Según enunciado: rango [1..20] para cada uno
     if (num_adultos < 0 || num_adultos > 20) {
@@ -694,7 +777,12 @@ int validarPasajeros(int num_adultos, int num_tercera_edad) {
     return 1;
 }
 
-// Validar tipo de pasaje
+/**
+ * @brief Valida los tipos de pasaje para adultos y tercera edad.
+ * @param tpa Tipo de pasaje adultos (0 o 1).
+ * @param tpt Tipo de pasaje tercera edad (0 o 1).
+ * @return 1 si válidos, 0 si inválidos.
+ */
 int validarTipoPasaje(int tpa, int tpt) {
     // Según enunciado: 0 = primera clase/VIP, 1 = turista/ejecutiva
     if (tpa != 0 && tpa != 1) {
@@ -710,7 +798,12 @@ int validarTipoPasaje(int tpa, int tpt) {
     return 1;
 }
 
-// Validar peso según tipo de vehículo
+/**
+ * @brief Valida el peso según el tipo de vehículo deducido del código.
+ * @param codigo Código del vehículo (para inferir el tipo).
+ * @param peso Peso ingresado (kg o toneladas según el tipo).
+ * @return 1 si el peso está en el rango válido, 0 si no.
+ */
 int validarPeso(int codigo, int peso) { 
     // Primero determinar tipo por código
     int tipo = codigo / 100;  // 0,1,2,3,4,5,6
@@ -749,7 +842,11 @@ int validarPeso(int codigo, int peso) {
     return 1;
 }
 
-// Validar tipo de ferry
+/**
+ * @brief Valida el campo `tipo_ferry` (0=Express, 1=Tradicional).
+ * @param tipo_ferry Entero esperado 0 o 1.
+ * @return 1 si válido, 0 si inválido.
+ */
 int validarTipoFerry(int tipo_ferry) {
     // Según enunciado: 0 = Express, 1 = Tradicional
     if (tipo_ferry != 0 && tipo_ferry != 1) {
@@ -759,7 +856,11 @@ int validarTipoFerry(int tipo_ferry) {
     return 1;
 }
 
-// Validar formato de placa (formato venezolano típico: letras y números)
+/**
+ * @brief Valida el formato de la placa (alfanumérica, longitud típica 6-7).
+ * @param placa Cadena con la placa a validar.
+ * @return 1 si válida, 0 si inválida.
+ */
 int validarPlaca(const char *placa) {
     int longitud = strlen(placa);
     
@@ -780,7 +881,11 @@ int validarPlaca(const char *placa) {
     return 1;
 }
 
-// FUNCIÓN PRINCIPAL DE VALIDACIÓN (integra todas las anteriores)
+/**
+ * @brief Valida un `Vehiculo` completo utilizando todas las validaciones auxiliares.
+ * @param v Puntero al vehículo a validar.
+ * @return 1 si el vehículo es válido, 0 si hay alguna validación que falla.
+ */
 int validarVehiculo(struct Vehiculo *v) {
   
     //Validar codigo
@@ -820,6 +925,17 @@ int validarVehiculo(struct Vehiculo *v) {
     return 1;  // Todo válido
 }
 
+/**
+ * @brief Bucle principal de la simulación que gestiona carga, viaje y espera.
+ * @param in Puntero a archivo de salida donde se escribirán reportes de viaje.
+ * @param sim Puntero a la estructura de simulación que contiene colas y ferrys.
+ * @return void
+ *
+ * Descripción (español): Ejecuta el ciclo principal de la simulación. Gestiona
+ * la cola de espera, intenta cargar vehículos, verifica condiciones de zarpe
+ * mediante `puedeViajar`, inicia viajes con `iniciarViaje` y actualiza el tiempo
+ * y estados de ferrys. Mantiene métricas como máxima espera y tiempo de carga.
+ */
 //=============================================================================
 // FUNCIÓN PRINCIPAL DE SIMULACIÓN REFACTORIZADA
 //=============================================================================
@@ -901,6 +1017,12 @@ void iniciarSimulacion(FILE *in, struct Simulacion *sim) {
 }
 
 
+/**
+ * @brief Mueve vehículos desde la cola general a la `cola_espera` del ferry según capacidad y hora.
+ * @param sim Puntero a la simulación.
+ * @param ferry_idx Índice del ferry que está cargando.
+ * @return void
+ */
 void actualizarColaEsperaDesdeOrigenes(struct Simulacion *sim, int ferry_idx) {
     // Calcular capacidad restante del ferry
     int capacidad_restante = sim->ferrys[ferry_idx].capacidad_vehiculos - 
@@ -976,6 +1098,13 @@ void actualizarColaEsperaDesdeOrigenes(struct Simulacion *sim, int ferry_idx) {
     }
 }
 
+/**
+ * @brief Determina si un vehículo cabe en un ferry según espacio, peso y capacidad de pasajeros.
+ * @param sim Puntero a la simulación.
+ * @param ferry_idx Índice del ferry a evaluar.
+ * @param v Vehículo a evaluar.
+ * @return 1 si cabe, 0 si no.
+ */
 int cabeEnFerry(struct Simulacion *sim, int ferry_idx, struct Vehiculo v) {
     struct Ferry ferry = sim->ferrys[ferry_idx];
     
@@ -998,7 +1127,13 @@ int cabeEnFerry(struct Simulacion *sim, int ferry_idx, struct Vehiculo v) {
     
     return 1;
 }
-// Función para bajar un vehículo del ferry (antes de zarpar)
+/**
+ * @brief Baja un vehículo del ferry en la posición indicada y actualiza estadísticas.
+ * @param sim Puntero a la simulación.
+ * @param ferry_idx Índice del ferry.
+ * @param posicion_vehiculo Posición del vehículo en `vehiculos_a_bordo`.
+ * @return 1 si se bajó correctamente, 0 si hubo error.
+ */
 int bajarVehiculoDelFerry(struct Simulacion *sim, int ferry_idx, int posicion_vehiculo) {
     struct Ferry *ferry = &sim->ferrys[ferry_idx];
     
@@ -1030,7 +1165,13 @@ int bajarVehiculoDelFerry(struct Simulacion *sim, int ferry_idx, int posicion_ve
     return 1;
 }
 
-// Función principal que maneja la lógica de prioridad de emergencias
+/**
+ * @brief Maneja la llegada de un vehículo de emergencia, intentando cargarlo o liberar espacio.
+ * @param sim Puntero a la simulación.
+ * @param ferry_idx Índice del ferry que se está evaluando.
+ * @param emergencia Vehículo de emergencia que requiere prioridad.
+ * @return void
+ */
 void manejarEmergenciaPrioritaria(struct Simulacion *sim, int ferry_idx, struct Vehiculo emergencia) {
     struct Ferry *ferry = &sim->ferrys[ferry_idx];
     int espacio_disponible = ferry->capacidad_vehiculos - ferry->num_vehiculos_abordo;
@@ -1091,7 +1232,12 @@ void manejarEmergenciaPrioritaria(struct Simulacion *sim, int ferry_idx, struct 
     }
 }
 
-// Función auxiliar para marcar un vehículo como asignado en cola total
+/**
+ * @brief Marca un vehículo de la cola total como asignado para evitar procesarlo de nuevo.
+ * @param sim Puntero a la simulación.
+ * @param placa Placa del vehículo a marcar.
+ * @return void
+ */
 void marcarVehiculoComoAsignado(struct Simulacion *sim, char *placa) {
     for (int i = 0; i < sim->cola_todos_vehiculos.cantidad; i++) {
         int idx = (sim->cola_todos_vehiculos.frente + i) % MAX_VEHICULOS_COLA;
@@ -1105,7 +1251,13 @@ void marcarVehiculoComoAsignado(struct Simulacion *sim, char *placa) {
     }
 }
 
-// Función auxiliar para encolar un nuevo vehículo
+/**
+ * @brief Encola un nuevo vehículo en la cola general con timestamp.
+ * @param cola Puntero a la cola general.
+ * @param v Vehículo a encolar.
+ * @param timestamp Marca de tiempo (minutos) de llegada.
+ * @return void
+ */
 void encolarNuevoVehiculo(struct ColaVehiculos *cola, struct Vehiculo v, int timestamp) {
     if (cola->cantidad >= MAX_VEHICULOS_COLA) {
         printf("Error: Cola total llena\n");
@@ -1122,7 +1274,18 @@ void encolarNuevoVehiculo(struct ColaVehiculos *cola, struct Vehiculo v, int tim
     cola->cantidad++;
 }
 
-// Función refactorizada de insertarEnColaEspera (ahora usa la estructura unificada)
+/**
+ * @brief Inserta un vehículo en la `cola_espera` manteniendo orden por hora.
+ * @param cola_espera Puntero a la `ColaVehiculos` que actúa como cola de espera.
+ * @param v Vehículo a insertar en la cola de espera.
+ * @param sim Puntero a la simulación (se usa para consultar capacidad del ferry).
+ * @param ferry_idx Índice del ferry cuyo espacio se está reservando.
+ * @return 1 si la inserción fue exitosa, 0 si no se pudo insertar (cola llena o falta de espacio).
+ *
+ * Descripción (español): Inserta el vehículo en `cola_espera` ordenando por
+ * `hora_llegada`. Comprueba límites: capacidad de la cola y espacio disponible
+ * en el ferry destino para evitar sobre-reservas.
+ */
 int insertarEnColaEspera(struct ColaVehiculos *cola_espera, struct Vehiculo v, 
                          struct Simulacion *sim, int ferry_idx) {
     // Verificar límite de la cola
@@ -1184,6 +1347,12 @@ int insertarEnColaEspera(struct ColaVehiculos *cola_espera, struct Vehiculo v,
     
     return 1;
 }
+/**
+ * @brief Carga el primer vehículo de la `cola_espera` en el ferry si cumple condiciones.
+ * @param sim Puntero a la simulación.
+ * @param ferry_idx Índice del ferry destino.
+ * @return void
+ */
 void cargarVehiculoDesdeEspera(struct Simulacion *sim, int ferry_idx) {
     // Verificar si hay vehículos en cola de espera (ahora es ColaVehiculos)
     if (sim->cola_espera.cantidad == 0) return;
@@ -1317,7 +1486,16 @@ void cargarVehiculoDesdeEspera(struct Simulacion *sim, int ferry_idx) {
     }
 }
 
-// Función para reinsertar un vehículo en cola total (reactivarlo)
+/**
+ * @brief Reinstaura un vehículo previamente marcado como inactivo en la cola total.
+ * @param sim Puntero a la simulación que contiene `cola_todos_vehiculos`.
+ * @param vehiculo Estructura `Vehiculo` que se desea reinsertar.
+ * @param origen Código que indica el origen de la reinserción (no usado actualmente).
+ * @return 1 si se reactivó un vehículo existente, 0 si se agregó como nuevo.
+ *
+ * Descripción (español): Busca en `cola_todos_vehiculos` un elemento con la misma
+ * placa y `activo==0`. Si se encuentra, lo reactiva; si no, lo encola como nuevo.
+ */
 int reinsertar_vehiculo(struct Simulacion *sim, struct Vehiculo vehiculo, int origen) {
     // Buscar en cola total (debe estar inactivo)
     for (int i = 0; i < sim->cola_todos_vehiculos.cantidad; i++) {
@@ -1337,9 +1515,17 @@ int reinsertar_vehiculo(struct Simulacion *sim, struct Vehiculo vehiculo, int or
     encolarNuevoVehiculo(&sim->cola_todos_vehiculos, vehiculo, sim->tiempo_actual_minutos);
     return 0;
 }
-//=============================================================================
-// FUNCIÓN puedeViajar
-//=============================================================================
+/**
+ * @brief Determina si un ferry puede zarpar según reglas de capacidad y colas.
+ * @param sim Puntero a la simulación con colas y ferrys.
+ * @param ferry_idx Índice del ferry a evaluar.
+ * @param hora_actual Hora actual en formato militar (hhmm) para comparar llegadas.
+ * @return 1 si el ferry puede zarpar, 0 en caso contrario.
+ *
+ * Descripción (español): Evalúa múltiples condiciones: mínimo de vehículos (30%),
+ * cola de espera vacía, capacidad máxima alcanzada y presencia de vehículos aptos
+ * en `cola_todos_vehiculos`. Considera emergencias como aptas para cualquier ferry.
+ */
 int puedeViajar(struct Simulacion *sim, int ferry_idx, int hora_actual) {
     struct Ferry *ferry = &sim->ferrys[ferry_idx];
     
@@ -1431,6 +1617,18 @@ int puedeViajar(struct Simulacion *sim, int ferry_idx, int hora_actual) {
     
     
    
+/**
+ * @brief Inicia un viaje para un ferry, registra estadísticas y genera reportes.
+ * @param in Archivo de salida (reporte) donde se volcará información del viaje.
+ * @param sim Puntero a la estructura de simulación que contiene el estado global.
+ * @param ferry_idx Índice del ferry que inicia el viaje en el arreglo `sim->ferrys`.
+ * @return void
+ *
+ * Descripción (español): Actualiza el estado del ferry a `ESTADO_VIAJE`, establece
+ * el tiempo restante de viaje, actualiza contadores y totales del día, genera los
+ * reportes de consola y en archivo, y reinicia los contadores del ferry para el
+ * siguiente ciclo de carga.
+ */
 //=============================================================================
 // FUNCIÓN iniciarViaje
 //=============================================================================
@@ -1462,6 +1660,15 @@ void iniciarViaje(FILE *in, struct Simulacion *sim, int ferry_idx) {
     sim->indice_orden_actual = (sim->indice_orden_actual + 1) % MAX_FERRIES;
 }
 
+/**
+ * @brief Actualiza los estados temporales de todos los ferrys (tiempo de viaje).
+ * @param sim Puntero a la estructura de simulación con todos los ferrys.
+ * @return void
+ *
+ * Descripción (español): Decrementa el contador `tiempo_restante_viaje` para cada
+ * ferry que esté en `ESTADO_VIAJE`. Si el tiempo llega a cero o menos, cambia el
+ * estado del ferry a `ESTADO_ESPERA` e imprime un mensaje informativo.
+ */
 //=============================================================================
 // NUEVA FUNCIÓN: actualizarEstadosFerrys
 //=============================================================================
@@ -1479,6 +1686,17 @@ void actualizarEstadosFerrys(struct Simulacion *sim) {
     }
 }
 
+/**
+ * @brief Evalúa condiciones para determinar si la simulación debe terminar.
+ * @param sim Puntero a la simulación con colas y ferrys.
+ * @param ferry_idx Índice del ferry a evaluar.
+ * @param hora_actual Hora actual en formato militar (hhmm) usada para comparaciones.
+ * @return 0 si la simulación debe terminar, 1 si debe continuar.
+ *
+ * Descripción (español): Comprueba si no existen vehículos aptos para el ferry,
+ * la cola de espera está vacía y el ferry no puede zarpar; en ese caso finaliza
+ * la simulación e imprime un resumen del ferry.
+ */
 //=============================================================================
 // FUNCIÓN terminarSimulacion (completada)
 //=============================================================================
@@ -1523,6 +1741,16 @@ int terminarSimulacion(struct Simulacion *sim, int ferry_idx, int hora_actual) {
 //=============================================================================
 // FUNCIONES DE ESTADÍSTICAS
 //=============================================================================
+/**
+ * @brief Genera un reporte detallado del viaje escrito en archivo.
+ * @param in Puntero a archivo donde se escribirá el reporte.
+ * @param sim Puntero a la simulación que contiene datos del ferry.
+ * @param ferry_idx Índice del ferry a reportar.
+ * @return void
+ *
+ * Descripción (español): Escribe en `in` un bloque con información del viaje
+ * (número de vehículos, pasajeros, peso, ingresos y lista de placas transportadas).
+ */
 //=============================================================================
 // NUEVA FUNCIÓN: generarReporteViaje
 //=============================================================================
@@ -1562,6 +1790,15 @@ void generarReporteViajeArchivo(FILE *in, struct Simulacion *sim, int ferry_idx)
     fprintf(in, "══════════════════════════════════════════════════════════\n\n");
 }
 
+/**
+ * @brief Muestra por consola un reporte resumido del viaje del ferry.
+ * @param sim Puntero a la estructura de simulación.
+ * @param ferry_idx Índice del ferry cuya información se mostrará.
+ * @return void
+ *
+ * Descripción (español): Imprime en stdout detalles del viaje similar al
+ * reporte en archivo, incluyendo lista de vehículos transportados.
+ */
 void generarReporteViaje(struct Simulacion *sim, int ferry_idx) {
     printf("\n");
     printf("══════════════════════════════════════════════════════════\n");
@@ -1597,6 +1834,14 @@ void generarReporteViaje(struct Simulacion *sim, int ferry_idx) {
     printf("══════════════════════════════════════════════════════════\n\n");
 }
 
+/**
+ * @brief Actualiza métricas relacionadas con la cola de espera.
+ * @param sim Puntero a la simulación con la cola de espera.
+ * @return void
+ *
+ * Descripción (español): Si la cantidad actual en `cola_espera` supera el
+ * máximo registrado, actualiza `max_vehiculos_espera` y la hora en que ocurrió.
+ */
 void actualizarEstadisticasEspera(struct Simulacion *sim) {
     int total_espera = sim->cola_espera.cantidad;
     
@@ -1608,6 +1853,15 @@ void actualizarEstadisticasEspera(struct Simulacion *sim) {
 
 
 
+/**
+ * @brief Escribe las estadísticas finales de la simulación en un archivo.
+ * @param in Puntero al archivo donde se volcarán las estadísticas.
+ * @param sim Puntero a la simulación con los datos acumulados.
+ * @return void
+ *
+ * Descripción (español): Incluye totales de vehículos, pasajeros, ingresos,
+ * vehículo más frecuente, máxima espera y resumen por ferry.
+ */
 void imprimirEstadisticasArchivo(FILE *in, struct Simulacion *sim) {
     fprintf(in, "\n");
     fprintf(in, "══════════════════════════════════════════════════════════\n");
@@ -1638,6 +1892,13 @@ void imprimirEstadisticasArchivo(FILE *in, struct Simulacion *sim) {
     fprintf(in, "══════════════════════════════════════════════════════════\n\n");
 }
 
+/**
+ * @brief Imprime por consola las estadísticas finales de la simulación.
+ * @param sim Puntero a la estructura de simulación con los datos.
+ * @return void
+ *
+ * Descripción (español): Muestra en stdout los mismos datos que `imprimirEstadisticasArchivo`.
+ */
 void imprimirEstadisticas(struct Simulacion *sim) {
     printf("\n");
     printf("══════════════════════════════════════════════════════════\n");
@@ -1668,6 +1929,15 @@ void imprimirEstadisticas(struct Simulacion *sim) {
     printf("══════════════════════════════════════════════════════════\n\n");
 }
 
+/**
+ * @brief Calcula el tipo de vehículo más frecuente en toda la simulación.
+ * @param sim Puntero a la simulación que contiene ferrys y colas.
+ * @param tipo_str Buffer donde se copiará el nombre del tipo más frecuente.
+ * @return void
+ *
+ * Descripción (español): Recorre ferrys, `cola_todos_vehiculos` y `cola_espera`
+ * para contar apariciones por tipo y devuelve el tipo con mayor conteo.
+ */
 void calcularVehiculoMasFrecuente(struct Simulacion *sim, char *tipo_str) {
     // Contadores para cada tipo de vehículo (0-6)
     // 0=liviano, 1=rústico, 2=van, 3=carga, 4=ambulancia, 5=bomberos, 6=policía
@@ -1734,6 +2004,15 @@ void calcularVehiculoMasFrecuente(struct Simulacion *sim, char *tipo_str) {
     }
 }
 
+/**
+ * @brief Calcula estadísticas finales relacionadas con pasajeros no trasladados.
+ * @param sim Puntero a la simulación que contiene colas y ferrys.
+ * @param ferry_idx Índice del ferry actualmente procesado (puede ser -1 si no aplica).
+ * @return void
+ *
+ * Descripción (español): Suma los pasajeros que quedaron en `cola_todos_vehiculos`, en
+ * `cola_espera` y en el ferry actual para obtener `total_pasajeros_no_trasladados`.
+ */
 void calcularEstadisticasFinales(struct Simulacion *sim, int ferry_idx) {
     // Calcular pasajeros no trasladados (vehículos que quedaron en colas)
     int pasajeros_no_trasladados = 0;
@@ -1774,8 +2053,17 @@ void calcularEstadisticasFinales(struct Simulacion *sim, int ferry_idx) {
     sim->total_pasajeros_no_trasladados = pasajeros_no_trasladados;
 }
 //=============================================================================
-// FUNCIÓN calcularIngresoVehiculo (si no la tienes)
+// FUNCIÓN calcularIngresoVehiculo
 //=============================================================================
+/**
+ * @brief Calcula el ingreso generado por un vehículo según su tipo y pasaje.
+ * @param v La estructura `Vehiculo` con información de pasajeros y tipo.
+ * @param tipoFerry Tipo de ferry (`TIPO_EXPRESS` o tradicional) que afecta tarifas.
+ * @return float Ingreso económico generado por ese vehículo.
+ *
+ * Descripción (español): Aplica las tarifas establecidas para adultos, tercera edad
+ * y tarifa por tipo de vehículo, diferenciando entre ferrys express y tradicionales.
+ */
 float calcularIngresoVehiculo(struct Vehiculo v, int tipoFerry) {
     float ingreso = 0.0;
     
@@ -1824,8 +2112,18 @@ float calcularIngresoVehiculo(struct Vehiculo v, int tipoFerry) {
 }
 
 //=============================================================================
-// FUNCIÓN actualizarEstadisticasBajada (si no la tienes)
+// FUNCIÓN actualizarEstadisticasBajada
 //=============================================================================
+/**
+ * @brief Actualiza contadores del ferry tras la bajada de un vehículo.
+ * @param ferry Puntero al `Ferry` cuyos contadores se actualizarán.
+ * @param bajado Puntero al `Vehiculo` que fue bajado del ferry.
+ * @return void
+ *
+ * Descripción (español): Resta el peso y pasajeros del vehículo bajado de los
+ * contadores actuales del ferry. La línea para restar ingresos está comentada
+ * porque la política de cálculo puede variar según la implementación.
+ */
 void actualizarEstadisticasBajada(struct Ferry *ferry, struct Vehiculo *bajado) {
     ferry->peso_actual_toneladas -= bajado->peso_toneladas;
     ferry->pasajeros_actuales -= bajado->total_pasajeros;
