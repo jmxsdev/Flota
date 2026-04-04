@@ -1,0 +1,69 @@
+
+============================================================
+ESTADÍSTICAS DE GENERACIÓN
+============================================================
+Archivo: test/fuerza_bruta/v500/proy1.in
+Fecha: 2026-04-03 19:57:56
+Total vehículos: 500
+Configuración: one_per_minute=False, horario=6:00-22:00
+
+Distribución por tipo:
+Tipo            Cantidad   Porcentaje
+-----------------------------------
+Liviano         71         14.2%
+Rústico         77         15.4%
+Van/Micro       71         14.2%
+Carga           121        24.2%
+Ambulancia      60         12.0%
+Bomberos        43         8.6%
+Policía         57         11.4%
+
+RÁFAGAS DETECTADAS (mismos tipo en misma hora):
+Hora       Cantidad   Tipo           
+-----------------------------------
+06:03      3          Liviano        
+06:10      2          Policía        
+06:12      2          Liviano        
+06:22      3          Bomberos       
+06:34      2          Carga          
+06:37      2          Ambulancia     
+06:40      2          Van/Micro      
+06:42      3          Van/Micro      
+06:46      2          Carga          
+06:48      2          Carga          
+06:49      2          Rústico        
+06:55      2          Ambulancia     
+06:59      2          Policía        
+07:03      2          Rústico        
+07:07      2          Rústico        
+07:18      2          Rústico        
+07:26      2          Liviano        
+07:32      2          Ambulancia     
+07:41      3          Van/Micro      
+07:41      2          Bomberos       
+07:43      2          Carga          
+07:45      2          Bomberos       
+07:55      2          Carga          
+08:01      2          Rústico        
+08:02      2          Rústico        
+08:06      3          Rústico        
+08:08      2          Carga          
+08:14      2          Liviano        
+08:16      2          Carga          
+08:19      2          Carga          
+08:21      2          Rústico        
+08:21      2          Rústico        
+08:21      2          Liviano        
+08:21      2          Carga          
+08:23      2          Ambulancia     
+08:23      2          Carga          
+08:24      2          Carga          
+08:24      2          Carga          
+08:27      2          Carga          
+08:28      2          Liviano        
+08:28      2          Van/Micro      
+08:30      2          Policía        
+08:33      2          Carga          
+08:33      3          Carga          
+============================================================
+

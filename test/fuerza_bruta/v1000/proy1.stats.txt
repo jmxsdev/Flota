@@ -1,0 +1,119 @@
+
+============================================================
+ESTADÍSTICAS DE GENERACIÓN
+============================================================
+Archivo: test/fuerza_bruta/v1000/proy1.in
+Fecha: 2026-04-03 20:17:45
+Total vehículos: 1000
+Configuración: one_per_minute=False, horario=6:00-22:00
+
+Distribución por tipo:
+Tipo            Cantidad   Porcentaje
+-----------------------------------
+Liviano         148        14.8%
+Rústico         146        14.6%
+Van/Micro       174        17.4%
+Carga           246        24.6%
+Ambulancia      96         9.6%
+Bomberos        63         6.3%
+Policía         127        12.7%
+
+RÁFAGAS DETECTADAS (mismos tipo en misma hora):
+Hora       Cantidad   Tipo           
+-----------------------------------
+06:03      2          Rústico        
+06:08      2          Liviano        
+06:12      2          Ambulancia     
+06:22      2          Carga          
+06:23      2          Van/Micro      
+06:24      2          Rústico        
+06:24      2          Carga          
+06:48      2          Van/Micro      
+06:48      3          Liviano        
+06:49      2          Liviano        
+06:56      2          Carga          
+07:03      2          Carga          
+07:04      2          Rústico        
+07:06      2          Rústico        
+07:09      2          Liviano        
+07:24      2          Carga          
+07:27      2          Bomberos       
+07:28      3          Carga          
+07:39      2          Carga          
+07:41      2          Liviano        
+07:42      2          Carga          
+07:46      2          Van/Micro      
+07:53      2          Liviano        
+07:54      2          Policía        
+08:01      3          Carga          
+08:01      2          Rústico        
+08:02      2          Ambulancia     
+08:06      2          Van/Micro      
+08:07      2          Rústico        
+08:07      2          Carga          
+08:08      3          Carga          
+08:14      2          Van/Micro      
+08:19      2          Policía        
+08:21      3          Rústico        
+08:21      2          Ambulancia     
+08:24      2          Van/Micro      
+08:25      3          Policía        
+08:28      2          Carga          
+08:33      3          Carga          
+08:33      2          Carga          
+08:36      2          Liviano        
+08:50      2          Carga          
+08:51      2          Ambulancia     
+08:53      2          Policía        
+08:58      2          Liviano        
+08:58      2          Van/Micro      
+08:58      2          Carga          
+09:04      2          Liviano        
+09:15      2          Carga          
+09:15      2          Liviano        
+09:17      2          Liviano        
+09:18      2          Carga          
+09:20      2          Policía        
+09:25      2          Rústico        
+09:27      5          Carga          
+09:32      2          Van/Micro      
+09:34      2          Liviano        
+09:34      2          Van/Micro      
+09:35      2          Carga          
+09:37      2          Ambulancia     
+09:39      2          Carga          
+09:42      3          Van/Micro      
+09:45      2          Van/Micro      
+09:49      2          Liviano        
+09:50      3          Rústico        
+09:51      5          Carga          
+09:53      2          Van/Micro      
+09:54      2          Carga          
+10:00      2          Carga          
+10:00      2          Bomberos       
+10:01      2          Carga          
+10:03      2          Van/Micro      
+10:05      2          Carga          
+10:07      2          Carga          
+10:09      2          Policía        
+10:14      2          Rústico        
+10:14      2          Carga          
+10:15      2          Carga          
+10:16      2          Rústico        
+10:21      2          Ambulancia     
+10:22      2          Carga          
+10:27      2          Liviano        
+10:28      2          Policía        
+10:28      2          Van/Micro      
+10:29      2          Van/Micro      
+10:30      2          Liviano        
+10:31      2          Carga          
+10:34      2          Carga          
+10:35      3          Carga          
+10:46      2          Van/Micro      
+10:50      3          Van/Micro      
+10:53      3          Van/Micro      
+10:56      2          Rústico        
+10:59      2          Van/Micro      
+============================================================
+

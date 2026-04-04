@@ -6,7 +6,7 @@
 #define MAX_FERRIES 3
 #define MAX_VEHICULOS_POR_FERRY 20  // Capacidad máxima de vehículos en un ferry
 #define TIEMPO_DE_CARGA_VEHICULO 3                                    // 
-#define MAX_VEHICULOS_COLA 1000       // Máximo en cola de espera
+#define MAX_VEHICULOS_COLA 10000       // Máximo en cola de espera
 #define MAX_PASAJEROS_POR_VEHICULO 20
 #define MAX_LARGO_PLACA 10
 #define NOMBRE_FERRY_MAX 30
@@ -206,7 +206,7 @@ void actualizarEstadisticasBajada(struct Ferry *ferry, struct Vehiculo *bajado);
 int main() {
     
     // Inicializar simulación
-    FILE *in = fopen("proy_1.out", "a");
+    FILE *in = fopen("proy_1.out", "w");
     struct Simulacion simulacion;
     inicializarSimulacion(&simulacion);
     
@@ -223,7 +223,7 @@ int main() {
     }
 
     
-    //fclose(in);
+    fclose(in);
     // Aquí continuaría la simulación...
     
     return 0;
@@ -819,7 +819,7 @@ int validarPeso(int codigo, int peso) {
             break;
             
         case 4: // Carga (en toneladas)
-            if (peso < 1 || peso > 12) {
+            if (peso < 1 || peso > 15) {
                 printf("ERROR: Peso vehículo carga (%d ton) fuera de rango\n", peso);
                 return 0;
             }
@@ -828,7 +828,7 @@ int validarPeso(int codigo, int peso) {
         case 5: // Ambulancia
         case 6: // Bomberos
         case 7: // Policía
-            if (peso < 1500 || peso > 8000) {
+            if (peso < 500 || peso > 8000) {
                 printf("ERROR: Peso vehículo emergencia (%d kg) fuera de rango\n", peso);
                 return 0;
             }
@@ -1061,7 +1061,6 @@ void actualizarColaEsperaDesdeOrigenes(struct Simulacion *sim, int ferry_idx) {
             }
             
             if (es_apto) {
-                printf("Vehiculo placa: %s peso ton: %f\n",vehiculo_estado->datos.placa, vehiculo_estado->datos.peso_toneladas);
                 // Verificar si cabe físicamente en el ferry
                 if (cabeEnFerry(sim, ferry_idx, vehiculo_estado->datos)) {
                     // Insertar en cola de espera normalmente
@@ -1079,8 +1078,6 @@ void actualizarColaEsperaDesdeOrigenes(struct Simulacion *sim, int ferry_idx) {
                     manejarEmergenciaPrioritaria(sim, ferry_idx, vehiculo_estado->datos);
                     vehiculo_estado->activo = 0;  // Ya fue procesada
                     movidos++;  // Considerar como movida (aunque no fue a cola_espera)
-                }else {
-                    vehiculo_estado->activo = 0;
                 }
             }
         }
@@ -1526,97 +1523,124 @@ int reinsertar_vehiculo(struct Simulacion *sim, struct Vehiculo vehiculo, int or
  * cola de espera vacía, capacidad máxima alcanzada y presencia de vehículos aptos
  * en `cola_todos_vehiculos`. Considera emergencias como aptas para cualquier ferry.
  */
-int puedeViajar(struct Simulacion *sim, int ferry_idx, int hora_actual) {
+ int puedeViajar(struct Simulacion *sim, int ferry_idx, int hora_actual) {
     struct Ferry *ferry = &sim->ferrys[ferry_idx];
     
-    // Calcular si hay vehículos en cola total que puedan ser cargados
+    // ===== VALIDACIÓN 1: Si no hay vehículos a bordo, no puede viajar =====
+    if (ferry->num_vehiculos_abordo == 0) {
+        return 0;
+    }
+    
+    // ===== VALIDACIÓN 2: Verificar si el ferry está LLENO =====
+    int ferry_lleno_vehiculos = (ferry->num_vehiculos_abordo >= ferry->capacidad_vehiculos);
+    int ferry_lleno_pasajeros = (ferry->pasajeros_actuales >= (ferry->capacidad_clase1 + ferry->capacidad_clase2));
+    int ferry_lleno_peso = (ferry->peso_actual_toneladas >= ferry->peso_maximo_toneladas);
+    
+    if (ferry_lleno_vehiculos || ferry_lleno_pasajeros || ferry_lleno_peso) {
+        // Devolver vehículos de cola_espera a cola_total
+        if (sim->cola_espera.cantidad > 0) {
+            int indice_actual = sim->cola_espera.frente;
+            for (int i = 0; i < sim->cola_espera.cantidad; i++) {
+                struct VehiculoConEstado *v_estado = &sim->cola_espera.elementos[indice_actual];
+                reinsertar_vehiculo(sim, v_estado->datos, 1);
+                indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
+            }
+            // Vaciar cola_espera
+            inicializarCola(&sim->cola_espera);
+        }
+        return 1;
+    }
+    
+    // ===== VALIDACIÓN 3: Verificar MÍNIMO de vehículos =====
+    int minimo_vehiculos = (int)(0.30 * ferry->capacidad_vehiculos);
+    if (ferry->num_vehiculos_abordo < minimo_vehiculos) {
+        return 0;
+    }
+    
+    // ===== VALIDACIÓN 4: Verificar vehículos en cola_espera =====
+    if (sim->cola_espera.cantidad > 0) {
+        // Verificar si algún vehículo en cola_espera PUEDE ser cargado
+        int alguno_puede_cargarse = 0;
+        int indice_actual = sim->cola_espera.frente;
+        
+        for (int i = 0; i < sim->cola_espera.cantidad; i++) {
+            struct VehiculoConEstado *v_estado = &sim->cola_espera.elementos[indice_actual];
+            if (cabeEnFerry(sim, ferry_idx, v_estado->datos)) {
+                alguno_puede_cargarse = 1;
+                break;
+            }
+            indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
+        }
+        
+        if (alguno_puede_cargarse) {
+            // Intentar cargar el primer vehículo que pueda
+            indice_actual = sim->cola_espera.frente;
+            for (int i = 0; i < sim->cola_espera.cantidad; i++) {
+                struct VehiculoConEstado *v_estado = &sim->cola_espera.elementos[indice_actual];
+                if (cabeEnFerry(sim, ferry_idx, v_estado->datos)) {
+                    // Cargar directamente
+                    int num = ferry->num_vehiculos_abordo;
+                    ferry->vehiculos_a_bordo[num] = v_estado->datos;
+                    ferry->num_vehiculos_abordo++;
+                    ferry->peso_actual_toneladas += v_estado->datos.peso_toneladas;
+                    ferry->pasajeros_actuales += (v_estado->datos.num_adultos + v_estado->datos.num_tercera_edad);
+                    ferry->pasajeros_mayores_actuales += v_estado->datos.num_tercera_edad;
+                    ferry->total_ingresos += calcularIngresoVehiculo(v_estado->datos, ferry->tipo);
+                    
+                    // Eliminar de cola_espera (avanzar frente)
+                    sim->cola_espera.frente = (sim->cola_espera.frente + 1) % MAX_VEHICULOS_COLA;
+                    sim->cola_espera.cantidad--;
+                    
+                    sim->tiempo_carga_restante = TIEMPO_DE_CARGA_VEHICULO;
+                    printf("  ✅ CARGADO DIRECTO: %s en %s\n", 
+                           v_estado->datos.placa, ferry->nombre);
+                    return 0;  // Seguir cargando
+                }
+                indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
+            }
+            return 0;
+        } else {
+            // Vehículos en cola_espera NO pueden ser cargados, devolverlos
+            int indice_actual = sim->cola_espera.frente;
+            for (int i = 0; i < sim->cola_espera.cantidad; i++) {
+                struct VehiculoConEstado *v_estado = &sim->cola_espera.elementos[indice_actual];
+                reinsertar_vehiculo(sim, v_estado->datos, 1);
+                indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
+            }
+            inicializarCola(&sim->cola_espera);
+            return 1;
+        }
+    }
+    
+    // ===== VALIDACIÓN 5: Verificar si hay vehículos aptos en cola_total =====
     int hay_vehiculos_aptos = 0;
     int indice_actual = sim->cola_todos_vehiculos.frente;
     
     for (int i = 0; i < sim->cola_todos_vehiculos.cantidad; i++) {
         struct VehiculoConEstado *v_estado = &sim->cola_todos_vehiculos.elementos[indice_actual];
         
-        // Solo considerar vehículos activos que ya hayan llegado
         if (v_estado->activo == 1 && v_estado->datos.hora_llegada <= hora_actual) {
-            // Verificar si es apto para este ferry
             int es_apto = 0;
             if (v_estado->datos.es_emergencia == 1) {
-                es_apto = 1;  // Emergencias aptas para cualquier ferry
+                es_apto = 1;
             } else {
                 es_apto = (v_estado->datos.tipo_ferry == ferry->tipo);
             }
             
-            if (es_apto) {
+            if (es_apto && cabeEnFerry(sim, ferry_idx, v_estado->datos)) {
                 hay_vehiculos_aptos = 1;
                 break;
             }
         }
-        
         indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
     }
     
-    int minimo_vehiculos = (int)(0.30 * ferry->capacidad_vehiculos);
-    int cola_espera_vacia = (sim->cola_espera.cantidad == 0);
-    
-    // Si no hay vehículos a bordo, no puede viajar
-    if (ferry->num_vehiculos_abordo == 0) {
-        return 0;
-    }
-    
-    // Si hay vehículos en cola de espera, aún puede cargar más
-    if (sim->cola_espera.cantidad > 0) {
-        return 0;
-    }
-    
-    // Caso 1: Capacidad mínima alcanzada Y no hay vehículos aptos en cola total
-    if (!hay_vehiculos_aptos && ferry->num_vehiculos_abordo >= minimo_vehiculos) {
-        return 1;
-    }
-    
-    // Caso 2: Capacidad mínima alcanzada Y cola de espera vacía
-    if (cola_espera_vacia && ferry->num_vehiculos_abordo >= minimo_vehiculos) {
-        return 1;
-    }
-    
-    // Caso 3: Capacidad máxima de vehículos alcanzada
-    if (ferry->num_vehiculos_abordo >= ferry->capacidad_vehiculos) {
-        return 1;
-    }
-    
-    // Caso 4: Capacidad máxima de pasajeros alcanzada
-    if (ferry->pasajeros_actuales >= (ferry->capacidad_clase1 + ferry->capacidad_clase2)) {
-        return 1;
-    }
-    
-    // Caso 5: Hay vehículos aptos en cola total pero no se pueden cargar por peso u otras restricciones
     if (hay_vehiculos_aptos) {
-        // Verificar si el primer vehículo apto ya llegó y es normal (no emergencia)
-        indice_actual = sim->cola_todos_vehiculos.frente;
-        for (int i = 0; i < sim->cola_todos_vehiculos.cantidad; i++) {
-            struct VehiculoConEstado *v_estado = &sim->cola_todos_vehiculos.elementos[indice_actual];
-            
-            if (v_estado->activo == 1 && v_estado->datos.hora_llegada <= hora_actual) {
-                int es_apto = 0;
-                if (v_estado->datos.es_emergencia == 1) {
-                    es_apto = 1;
-                } else {
-                    es_apto = (v_estado->datos.tipo_ferry == ferry->tipo);
-                }
-                
-                if (es_apto && v_estado->datos.es_emergencia == 0) {
-                    return 0;  // Hay vehículos normales esperando
-                }
-            }
-            
-            indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
-        }
+        return 0;
     }
     
-    return 0;
+    return 1;
 } 
-    
-    
-   
 /**
  * @brief Inicia un viaje para un ferry, registra estadísticas y genera reportes.
  * @param in Archivo de salida (reporte) donde se volcará información del viaje.
@@ -2014,42 +2038,84 @@ void calcularVehiculoMasFrecuente(struct Simulacion *sim, char *tipo_str) {
  * `cola_espera` y en el ferry actual para obtener `total_pasajeros_no_trasladados`.
  */
 void calcularEstadisticasFinales(struct Simulacion *sim, int ferry_idx) {
-    // Calcular pasajeros no trasladados (vehículos que quedaron en colas)
     int pasajeros_no_trasladados = 0;
+    int vehiculos_no_trasladados = 0;
     
-    // Contar pasajeros en cola_todos_vehiculos (vehículos activos no asignados)
+    printf("\n========== ESTADÍSTICAS FINALES ==========\n");
+    
+    // ===== 1. Vehículos en cola_todos_vehiculos (activos no asignados) =====
     int indice_actual = sim->cola_todos_vehiculos.frente;
-
+    int count_cola_total = 0;
+    
     for (int i = 0; i < sim->cola_todos_vehiculos.cantidad; i++) {
-
-        struct VehiculoConEstado *v_estado = &sim->cola_todos_vehiculos.elementos[i];
-        // Solo considerar vehículos activos (no asignados)
+        struct VehiculoConEstado *v_estado = &sim->cola_todos_vehiculos.elementos[indice_actual];
+        
         if (v_estado->activo == 1) {
-            pasajeros_no_trasladados += (v_estado->datos.total_pasajeros);
+            pasajeros_no_trasladados += v_estado->datos.total_pasajeros;
+            vehiculos_no_trasladados++;
+            count_cola_total++;
         }
         
         indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
     }
+    printf("📋 Vehículos en cola total (no asignados): %d\n", count_cola_total);
     
-    // Contar pasajeros en cola_espera (vehículos que están esperando para ser cargados)
+    // ===== 2. Vehículos en cola_espera =====
     indice_actual = sim->cola_espera.frente;
+    int count_cola_espera = sim->cola_espera.cantidad;
+    
     for (int i = 0; i < sim->cola_espera.cantidad; i++) {
         struct VehiculoConEstado *v_estado = &sim->cola_espera.elementos[indice_actual];
-        // Los vehículos en cola_espera siempre están activos
-        pasajeros_no_trasladados += (v_estado->datos.total_pasajeros);
-        
+        pasajeros_no_trasladados += v_estado->datos.total_pasajeros;
         indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
     }
-
-    // ===== 3. Vehículos en el ferry actual =====
+    printf("⏳ Vehículos en cola de espera: %d\n", count_cola_espera);
+    vehiculos_no_trasladados += count_cola_espera;
+    
+    // ===== 3. Vehículos en el ferry actual que no pudo zarpar =====
+    int count_ferry = 0;
     if (ferry_idx >= 0 && ferry_idx < MAX_FERRIES) {
         struct Ferry *ferry = &sim->ferrys[ferry_idx];
-        int count_ferry = ferry->num_vehiculos_abordo;
+        count_ferry = ferry->num_vehiculos_abordo;
         
         for (int i = 0; i < ferry->num_vehiculos_abordo; i++) {
             pasajeros_no_trasladados += ferry->vehiculos_a_bordo[i].total_pasajeros;
         }
+        printf("🚢 Vehículos a bordo del ferry %s (sin zarpar): %d\n", 
+               ferry->nombre, count_ferry);
+        vehiculos_no_trasladados += count_ferry;
     }
+    
+    // ===== 4. Vehículos en otros ferrys que no están en viaje =====
+    int count_otros_ferrys = 0;
+    for (int i = 0; i < MAX_FERRIES; i++) {
+        if (i != ferry_idx && sim->ferrys[i].num_vehiculos_abordo > 0) {
+            struct Ferry *ferry = &sim->ferrys[i];
+            count_otros_ferrys += ferry->num_vehiculos_abordo;
+            
+            for (int j = 0; j < ferry->num_vehiculos_abordo; j++) {
+                pasajeros_no_trasladados += ferry->vehiculos_a_bordo[j].total_pasajeros;
+            }
+        }
+    }
+    if (count_otros_ferrys > 0) {
+        printf("🚢 Vehículos en otros ferrys (sin viajar): %d\n", count_otros_ferrys);
+        vehiculos_no_trasladados += count_otros_ferrys;
+    }
+    
+    // ===== RESUMEN FINAL =====
+    printf("\n📊 RESUMEN FINAL:\n");
+    printf("   ✅ Total vehículos trasladados: %d\n", sim->total_vehiculos_dia);
+    printf("   ❌ Total vehículos NO trasladados: %d\n", vehiculos_no_trasladados);
+    printf("   📦 Total vehículos procesados: %d\n", 
+           sim->total_vehiculos_dia + vehiculos_no_trasladados);
+    
+    printf("\n   👥 Total pasajeros trasladados: %d\n", sim->total_pasajeros_dia);
+    printf("   👥 Total pasajeros NO trasladados: %d\n", pasajeros_no_trasladados);
+    printf("   👥 Total pasajeros procesados: %d\n", 
+           sim->total_pasajeros_dia + pasajeros_no_trasladados);
+    
+    // Guardar en la estructura (opcional, si quieres conservar el valor)
     sim->total_pasajeros_no_trasladados = pasajeros_no_trasladados;
 }
 //=============================================================================
@@ -2068,7 +2134,8 @@ float calcularIngresoVehiculo(struct Vehiculo v, int tipoFerry) {
     float ingreso = 0.0;
     
     // Tarifas según tabla del enunciado
-    if (tipoFerry == TIPO_EXPRESS) {
+    if (v.tiene_pasajeros == 1) {
+       if (tipoFerry == TIPO_EXPRESS) {
         // Ferry Express
         if (v.tipo_pasaje_adultos == 0) { // VIP
             ingreso += v.num_adultos * 1020.00;
@@ -2087,22 +2154,23 @@ float calcularIngresoVehiculo(struct Vehiculo v, int tipoFerry) {
             ingreso += v.num_tercera_edad * 150.50;
         }
     }
+    }
     
     // Tarifa del vehículo según tipo
     switch(v.tipo_vehiculo) {
-        case 0: // liviano
+        case 1: // liviano
             ingreso += (tipoFerry == TIPO_EXPRESS) ? 1090.00 : 590.00;
             break;
-        case 1: // rústico
+        case 2: // rústico
             ingreso += (tipoFerry == TIPO_EXPRESS) ? 1310.00 : 710.00;
             break;
-        case 2: // van/microbus
+        case 3: // van/microbus
             ingreso += (tipoFerry == TIPO_EXPRESS) ? 1600.00 : 850.00;
             break;
-        case 3: // carga
+        case 4: // carga
             ingreso += (tipoFerry == TIPO_EXPRESS) ? 2400.00 : 1200.00;
             break;
-        case 4: case 5: case 6: // ambulancias, bomberos, policía
+        case 5: case 6: case 7: // ambulancias, bomberos, policía
             // Asumimos que emergencias no pagan o pagan tarifa especial
             ingreso += 0; 
             break;

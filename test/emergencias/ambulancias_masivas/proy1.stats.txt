@@ -1,0 +1,19 @@
+============================================================
+ESTADÍSTICAS DE GENERACIÓN - PRUEBA DE EMERGENCIA
+============================================================
+Archivo: emergencias/escenario3_ambulancias_masivas/proy1.in
+Fecha: 2026-04-03 22:42:00
+Total vehículos: 50
+
+Composición:
+  Ambulancias: 40
+  Policías: 5
+  Bomberos: 5
+  Otros: 0
+  Tamaño de ráfaga: 20
+  Horario: 9:00-11:00
+
+RÁFAGAS CONSECUTIVAS DETECTADAS:
+  Ambulancia: máximo 9 vehículos seguidos
+
+============================================================

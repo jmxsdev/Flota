@@ -1,0 +1,35 @@
+
+============================================================
+ESTADÍSTICAS DE GENERACIÓN
+============================================================
+Archivo: test/fuerza_bruta/v100/proy1.in
+Fecha: 2026-04-03 19:47:00
+Total vehículos: 100
+Configuración: one_per_minute=False, horario=6:00-22:00
+
+Distribución por tipo:
+Tipo            Cantidad   Porcentaje
+-----------------------------------
+Liviano         13         13.0%
+Rústico         14         14.0%
+Van/Micro       10         10.0%
+Carga           28         28.0%
+Ambulancia      13         13.0%
+Bomberos        6          6.0%
+Policía         16         16.0%
+
+RÁFAGAS DETECTADAS (mismos tipo en misma hora):
+Hora       Cantidad   Tipo           
+-----------------------------------
+06:03      2          Bomberos       
+06:08      2          Liviano        
+06:10      2          Rústico        
+06:12      2          Carga          
+06:18      2          Ambulancia     
+06:23      3          Policía        
+06:23      2          Carga          
+06:30      2          Carga          
+06:31      2          Policía        
+06:34      2          Liviano        
+============================================================
+

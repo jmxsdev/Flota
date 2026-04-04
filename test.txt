@@ -1,0 +1,31 @@
+para archivo emergencias_tes.py
+Generar todos los escenarios
+python generate_emergency_tests.py
+
+# Generar solo el escenario 5 (50 vehículos demostrativos)
+python generate_emergency_tests.py --scenario 5
+
+# Generar en directorio personalizado
+python generate_emergency_tests.py --output-dir mis_pruebas --scenario 5
+
+# Generar escenario específico
+python generate_emergency_tests.py --scenario 1  # Muchas ambulancias
+python generate_emergency_tests.py --scenario 2  # Emergencias mixtas
+python generate_emergency_tests.py --scenario 3  # Ambulancias masivas
+python generate_emergency_tests.py --scenario 4  # Prioridad intercalada
+
+genera en l misma carpeta
+
+para el archivo generate_test.py puedes direccionar la salida
+# Generar 1000 vehículos con horas aleatorias (múltiples por minuto)
+python script.py --outputs test/archivo1.in=1000
+
+# Generar 8600 vehículos con máximo uno por minuto (requiere rango suficiente)
+python script.py --outputs test/archivo2.in=8600 --one-per-minute --start-hour=0 --end-hour=23
+
+# Generar con rango horario específico y un vehículo por minuto
+python script.py --outputs test/archivo3.in=500 --one-per-minute --start-hour=8 --end-hour=20
+
+# Múltiples archivos
+python script.py --outputs test/archivo1.in=1000 test/archivo2.in=2000 --one-per-minute
+la carpeta basicos fue creada manualmente

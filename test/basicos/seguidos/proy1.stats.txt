@@ -1,0 +1,35 @@
+
+============================================================
+ESTADÍSTICAS DE GENERACIÓN
+============================================================
+Archivo: test/manejo_prioridad/proy1.in
+Fecha: 2026-04-03 22:30:34
+Total vehículos: 50
+Configuración: one_per_minute=False, horario=8:00-20:00
+Máximo consecutivo: 7:20
+
+Distribución por tipo:
+Tipo            Cantidad   Porcentaje Esperado  
+--------------------------------------------------
+Liviano         7          14.0%      15%
+Rústico         8          16.0%      15%
+Van/Micro       8          16.0%      15%
+Carga           8          16.0%      24%
+Ambulancia      8          16.0%      10%
+Bomberos        3          6.0%      8%
+Policía         8          16.0%      13%
+
+RÁFAGAS CONSECUTIVAS DETECTADAS (más de 1 vehículo seguido):
+Tipo            Tamaño máx   Veces     
+----------------------------------------
+Liviano         2            2         
+Rústico         2            1         
+Van/Micro       3            2         
+Carga           2            2         
+Ambulancia      2            1         
+Policía         7            1         
+
+Primeros 20 vehículos (para verificar ráfagas):
+A R L L A C C L L R C C A A V V R B A R
+============================================================
+

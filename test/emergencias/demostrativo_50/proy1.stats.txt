@@ -1,0 +1,21 @@
+============================================================
+ESTADÍSTICAS DE GENERACIÓN - PRUEBA DE EMERGENCIA
+============================================================
+Archivo: emergencias/escenario5_demostrativo_50/proy1.in
+Fecha: 2026-04-03 22:42:00
+Total vehículos: 50
+
+Composición:
+  Ambulancias: 12
+  Policías: 10
+  Bomberos: 8
+  Otros: 20
+  Tamaño de ráfaga: 4
+  Horario: 8:00-18:00
+
+RÁFAGAS CONSECUTIVAS DETECTADAS:
+  Ambulancia: máximo 2 vehículos seguidos
+  Bomberos: máximo 2 vehículos seguidos
+  Policía: máximo 2 vehículos seguidos
+
+============================================================
