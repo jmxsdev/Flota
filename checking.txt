@@ -28,7 +28,4 @@
 
 10- Actualmente tengo un programa con respecto a los vehiculos de prioridad, resulta que la simulacion aprata los vehiculos en dos colas dependiento su pasaje, esto es un problema ya que los que tienen prioridad deben ingresar al ferry que este cargando en el momento que lleguen, es decir, si esta cargando un ferry express pero tiene pasaje tradicional (por ende deberia estar en la cola tradicional) tiene que ingrezar al ferry express. 
 
-10/solucion-- colasEspera.promt
-
-11-Resulta que el desbordamiento lo estaba manejando en la cola de espera solamente pero hay vehiculos en la cola del ferry que ya estan cargados que puede que no esten el la cola de espera, aca tambien tengo que manejar el desbordamiento porque desde la cola de espera no tengo que ejecutar la funcion de descargar del ferry para ingresar un nuevo prioridad
-
+10/solucion-- se unificaron todas las colas y aparte una cola de espera

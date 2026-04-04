@@ -406,7 +406,7 @@ int encolar_nuevo(struct ColaVehiculos *cola, struct Vehiculo nuevo) {
  * @return Índice dentro del arreglo `cola->elementos` del vehículo encontrado,
  *         o -1 si no hay vehículos activos que cumplan los criterios.
  *
- * Descripción (español): Recorre la cola circular respetando el orden sin
+ * Descripción: Recorre la cola circular respetando el orden sin
  * modificar `frente` o `final`. Primero busca emergencias (si aplica), luego
  * vehículos del tipo solicitado y finalmente cualquier vehículo activo.
  */
@@ -459,7 +459,7 @@ int buscar_proximo_vehiculo(struct ColaVehiculos *cola, int tipo_ferry_buscado, 
  * @param timestamp Marca de tiempo (minutos) de la asignación.
  * @return 1 si se asignó un vehículo, 0 si no había vehículos disponibles.
  *
- * Descripción (español): Busca el próximo vehículo (priorizando emergencias)
+ * Descripción: Busca el próximo vehículo (priorizando emergencias)
  * y marca su `activo` como 0 para indicar que fue asignado, además de fijar
  * `timestamp_asignacion`.
  */
@@ -931,7 +931,7 @@ int validarVehiculo(struct Vehiculo *v) {
  * @param sim Puntero a la estructura de simulación que contiene colas y ferrys.
  * @return void
  *
- * Descripción (español): Ejecuta el ciclo principal de la simulación. Gestiona
+ * Descripción: Ejecuta el ciclo principal de la simulación. Gestiona
  * la cola de espera, intenta cargar vehículos, verifica condiciones de zarpe
  * mediante `puedeViajar`, inicia viajes con `iniciarViaje` y actualiza el tiempo
  * y estados de ferrys. Mantiene métricas como máxima espera y tiempo de carga.
@@ -1279,7 +1279,7 @@ void encolarNuevoVehiculo(struct ColaVehiculos *cola, struct Vehiculo v, int tim
  * @param ferry_idx Índice del ferry cuyo espacio se está reservando.
  * @return 1 si la inserción fue exitosa, 0 si no se pudo insertar (cola llena o falta de espacio).
  *
- * Descripción (español): Inserta el vehículo en `cola_espera` ordenando por
+ * Descripción: Inserta el vehículo en `cola_espera` ordenando por
  * `hora_llegada`. Comprueba límites: capacidad de la cola y espacio disponible
  * en el ferry destino para evitar sobre-reservas.
  */
@@ -1490,7 +1490,7 @@ void cargarVehiculoDesdeEspera(struct Simulacion *sim, int ferry_idx) {
  * @param origen Código que indica el origen de la reinserción (no usado actualmente).
  * @return 1 si se reactivó un vehículo existente, 0 si se agregó como nuevo.
  *
- * Descripción (español): Busca en `cola_todos_vehiculos` un elemento con la misma
+ * Descripción: Busca en `cola_todos_vehiculos` un elemento con la misma
  * placa y `activo==0`. Si se encuentra, lo reactiva; si no, lo encola como nuevo.
  */
 int reinsertar_vehiculo(struct Simulacion *sim, struct Vehiculo vehiculo, int origen) {
@@ -1519,7 +1519,7 @@ int reinsertar_vehiculo(struct Simulacion *sim, struct Vehiculo vehiculo, int or
  * @param hora_actual Hora actual en formato militar (hhmm) para comparar llegadas.
  * @return 1 si el ferry puede zarpar, 0 en caso contrario.
  *
- * Descripción (español): Evalúa múltiples condiciones: mínimo de vehículos (30%),
+ * Descripción: Evalúa múltiples condiciones: mínimo de vehículos (30%),
  * cola de espera vacía, capacidad máxima alcanzada y presencia de vehículos aptos
  * en `cola_todos_vehiculos`. Considera emergencias como aptas para cualquier ferry.
  */
@@ -1648,7 +1648,7 @@ int reinsertar_vehiculo(struct Simulacion *sim, struct Vehiculo vehiculo, int or
  * @param ferry_idx Índice del ferry que inicia el viaje en el arreglo `sim->ferrys`.
  * @return void
  *
- * Descripción (español): Actualiza el estado del ferry a `ESTADO_VIAJE`, establece
+ * Descripción: Actualiza el estado del ferry a `ESTADO_VIAJE`, establece
  * el tiempo restante de viaje, actualiza contadores y totales del día, genera los
  * reportes de consola y en archivo, y reinicia los contadores del ferry para el
  * siguiente ciclo de carga.
@@ -1689,7 +1689,7 @@ void iniciarViaje(FILE *in, struct Simulacion *sim, int ferry_idx) {
  * @param sim Puntero a la estructura de simulación con todos los ferrys.
  * @return void
  *
- * Descripción (español): Decrementa el contador `tiempo_restante_viaje` para cada
+ * Descripción: Decrementa el contador `tiempo_restante_viaje` para cada
  * ferry que esté en `ESTADO_VIAJE`. Si el tiempo llega a cero o menos, cambia el
  * estado del ferry a `ESTADO_ESPERA` e imprime un mensaje informativo.
  */
@@ -1717,7 +1717,7 @@ void actualizarEstadosFerrys(struct Simulacion *sim) {
  * @param hora_actual Hora actual en formato militar (hhmm) usada para comparaciones.
  * @return 0 si la simulación debe terminar, 1 si debe continuar.
  *
- * Descripción (español): Comprueba si no existen vehículos aptos para el ferry,
+ * Descripción: Comprueba si no existen vehículos aptos para el ferry,
  * la cola de espera está vacía y el ferry no puede zarpar; en ese caso finaliza
  * la simulación e imprime un resumen del ferry.
  */
@@ -1772,7 +1772,7 @@ int terminarSimulacion(struct Simulacion *sim, int ferry_idx, int hora_actual) {
  * @param ferry_idx Índice del ferry a reportar.
  * @return void
  *
- * Descripción (español): Escribe en `in` un bloque con información del viaje
+ * Descripción: Escribe en `in` un bloque con información del viaje
  * (número de vehículos, pasajeros, peso, ingresos y lista de placas transportadas).
  */
 //=============================================================================
@@ -1820,7 +1820,7 @@ void generarReporteViajeArchivo(FILE *in, struct Simulacion *sim, int ferry_idx)
  * @param ferry_idx Índice del ferry cuya información se mostrará.
  * @return void
  *
- * Descripción (español): Imprime en stdout detalles del viaje similar al
+ * Descripción: Imprime en stdout detalles del viaje similar al
  * reporte en archivo, incluyendo lista de vehículos transportados.
  */
 void generarReporteViaje(struct Simulacion *sim, int ferry_idx) {
@@ -1863,7 +1863,7 @@ void generarReporteViaje(struct Simulacion *sim, int ferry_idx) {
  * @param sim Puntero a la simulación con la cola de espera.
  * @return void
  *
- * Descripción (español): Si la cantidad actual en `cola_espera` supera el
+ * Descripción: Si la cantidad actual en `cola_espera` supera el
  * máximo registrado, actualiza `max_vehiculos_espera` y la hora en que ocurrió.
  */
 void actualizarEstadisticasEspera(struct Simulacion *sim) {
@@ -1883,7 +1883,7 @@ void actualizarEstadisticasEspera(struct Simulacion *sim) {
  * @param sim Puntero a la simulación con los datos acumulados.
  * @return void
  *
- * Descripción (español): Incluye totales de vehículos, pasajeros, ingresos,
+ * Descripción: Incluye totales de vehículos, pasajeros, ingresos,
  * vehículo más frecuente, máxima espera y resumen por ferry.
  */
 void imprimirEstadisticasArchivo(FILE *in, struct Simulacion *sim) {
@@ -1921,7 +1921,7 @@ void imprimirEstadisticasArchivo(FILE *in, struct Simulacion *sim) {
  * @param sim Puntero a la estructura de simulación con los datos.
  * @return void
  *
- * Descripción (español): Muestra en stdout los mismos datos que `imprimirEstadisticasArchivo`.
+ * Descripción: Muestra en stdout los mismos datos que `imprimirEstadisticasArchivo`.
  */
 void imprimirEstadisticas(struct Simulacion *sim) {
     printf("\n");
@@ -1959,7 +1959,7 @@ void imprimirEstadisticas(struct Simulacion *sim) {
  * @param tipo_str Buffer donde se copiará el nombre del tipo más frecuente.
  * @return void
  *
- * Descripción (español): Recorre ferrys, `cola_todos_vehiculos` y `cola_espera`
+ * Descripción: Recorre ferrys, `cola_todos_vehiculos` y `cola_espera`
  * para contar apariciones por tipo y devuelve el tipo con mayor conteo.
  */
 void calcularVehiculoMasFrecuente(struct Simulacion *sim, char *tipo_str) {
@@ -2034,7 +2034,7 @@ void calcularVehiculoMasFrecuente(struct Simulacion *sim, char *tipo_str) {
  * @param ferry_idx Índice del ferry actualmente procesado (puede ser -1 si no aplica).
  * @return void
  *
- * Descripción (español): Suma los pasajeros que quedaron en `cola_todos_vehiculos`, en
+ * Descripción: Suma los pasajeros que quedaron en `cola_todos_vehiculos`, en
  * `cola_espera` y en el ferry actual para obtener `total_pasajeros_no_trasladados`.
  */
 void calcularEstadisticasFinales(struct Simulacion *sim, int ferry_idx) {
@@ -2127,7 +2127,7 @@ void calcularEstadisticasFinales(struct Simulacion *sim, int ferry_idx) {
  * @param tipoFerry Tipo de ferry (`TIPO_EXPRESS` o tradicional) que afecta tarifas.
  * @return float Ingreso económico generado por ese vehículo.
  *
- * Descripción (español): Aplica las tarifas establecidas para adultos, tercera edad
+ * Descripción: Aplica las tarifas establecidas para adultos, tercera edad
  * y tarifa por tipo de vehículo, diferenciando entre ferrys express y tradicionales.
  */
 float calcularIngresoVehiculo(struct Vehiculo v, int tipoFerry) {
@@ -2188,7 +2188,7 @@ float calcularIngresoVehiculo(struct Vehiculo v, int tipoFerry) {
  * @param bajado Puntero al `Vehiculo` que fue bajado del ferry.
  * @return void
  *
- * Descripción (español): Resta el peso y pasajeros del vehículo bajado de los
+ * Descripción: Resta el peso y pasajeros del vehículo bajado de los
  * contadores actuales del ferry. La línea para restar ingresos está comentada
  * porque la política de cálculo puede variar según la implementación.
  */

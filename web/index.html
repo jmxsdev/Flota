@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proyecto Flota — Informe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>Proyecto Flota</h1>
+      <p class="lead">Simulación de operación de ferrys y gestión de colas de vehículos — Informe</p>
+    </div>
+  </header>
+
+  <main class="container grid">
+    <nav class="sidebar">
+      <ul>
+        <li><a href="#portada">4.1 Portada</a></li>
+        <li><a href="#descripcion">4.2 Descripción del problema</a></li>
+        <li><a href="#analisis">4.3 Análisis de la solución</a></li>
+        <li><a href="#estructuras">4.4 Estructuras de datos</a></li>
+        <li><a href="#algoritmos">4.5 Algoritmos implementados</a></li>
+        <li><a href="#pruebas">4.6 Pruebas realizadas</a></li>
+        <li><a href="#conclusiones">4.7 Conclusiones</a></li>
+        <li><a href="../TESTS.md" target="_blank">Instrucciones de tests</a></li>
+      </ul>
+    </nav>
+
+    <article class="content">
+
+      <section id="portada" class="card">
+        <h2>4.1 Portada</h2>
+        <ul class="meta">
+          <li><strong>Título del proyecto:</strong> Simulación de operación de ferrys y gestión de colas de vehículos</li>
+          <li><strong>Nombres y apellidos:</strong> [Nombre Apellido] / [Nombre Apellido]</li>
+          <li><strong>Cédulas:</strong> [V-XXXXXXXX / V-YYYYYYYY]</li>
+          <li><strong>Sección:</strong> [Sección o grupo]</li>
+          <li><strong>Fecha de entrega:</strong> [DD/MM/AAAA]</li>
+        </ul>
+      </section>
+
+      <section id="descripcion" class="card">
+        <h2>4.2 Descripción del problema</h2>
+        <p><strong>Explicación general y objetivos:</strong> Este proyecto implementa una simulación que modela la llegada y embarque de vehículos en una terminal de ferrys. El objetivo es gestionar colas, priorizar emergencias, respetar capacidades de vehículos y peso, y generar reportes y estadísticas de operación.</p>
+        <p><strong>Contexto y propósito:</strong> Herramienta académica para evaluar políticas de carga, priorización y tiempos en un sistema de transporte por ferry, útil para análisis y validación de reglas de negocio.</p>
+      </section>
+
+      <section id="analisis" class="card">
+        <h2>4.3 Análisis de la solución</h2>
+        <h3>Organización y almacenamiento de datos</h3>
+        <p>Los datos se representan mediante `struct` en C. Las colas se implementan con arreglos circulares estáticos que contienen elementos tipo `VehiculoConEstado` (cada uno con `activo` y `timestamp`). La entrada se lee desde `proy1.in` y se carga en `cola_todos_vehiculos`.</p>
+
+        <h3>Justificación de decisiones</h3>
+        <ul>
+          <li>Uso de arreglos estáticos para simplicidad y compatibilidad con entornos de práctica.</li>
+          <li>Política de prioridad para emergencias implementada para minimizar tiempo de respuesta.</li>
+          <li>Representación de tiempo en minutos internamente y formato hora militar en I/O para comparaciones sencillas.</li>
+        </ul>
+      </section>
+
+      <section id="estructuras" class="card">
+        <h2>4.4 Estructuras de datos</h2>
+        <p><strong>Structs principales:</strong></p>
+        <ul>
+          <li><code>Vehiculo</code>: campos de entrada y campos derivados (`tipo_vehiculo`, `es_emergencia`, `peso_toneladas`, `total_pasajeros`).</li>
+          <li><code>Ferry</code>: identificador, capacidades, tiempos, estado y estadísticas.</li>
+          <li><code>VehiculoConEstado</code>: `Vehiculo` + `activo` + `timestamp_asignacion`.</li>
+          <li><code>ColaVehiculos</code>: arreglo circular con `frente`, `final`, `cantidad`.</li>
+          <li><code>Simulacion</code>: estado global con `ferrys[]`, colas, orden de carga y métricas.</li>
+        </ul>
+
+        <p><strong>Estructuras aplicadas:</strong> arreglos estáticos y buffers circulares; contadores para estadísticas.</p>
+      </section>
+
+      <section id="algoritmos" class="card">
+        <h2>4.5 Algoritmos implementados</h2>
+        <h3>Resumen en pseudocódigo</h3>
+        <pre class="pseudocode">// Inicialización
+inicializarSimulacion(sim)
+leer archivo -> encolar en cola_todos_vehiculos
+sim.tiempo_actual = hora primer vehículo
+
+// Bucle principal
+while(simulación no terminada):
+  ferry = siguiente en orden_carga
+  if ferry.estado == CARGA:
+    actualizarColaEsperaDesdeOrigenes(ferry)
+    if sim.tiempo_carga_restante > 0: sim.tiempo_carga_restante--
+    else: cargarVehiculoDesdeEspera(ferry)
+    if puedeViajar(ferry): iniciarViaje(ferry)
+  else if ferry.estado == ESPERA:
+    ferry.estado = CARGA
+  sim.tiempo_actual++
+  actualizarEstadosFerrys(sim)
+  if terminarSimulacion(sim): break
+        </pre>
+
+        <h3>Políticas clave</h3>
+        <ul>
+          <li><strong>Prioridad emergencias:</strong> emergencias cargan primero; si no caben, se bajan vehículos normales para liberar espacio.</li>
+          <li><strong>Condición de zarpe:</strong> mínimo 30% vehículos o condiciones de llenado, verificación de peso y pasajeros.</li>
+        </ul>
+      </section>
+
+      <section id="pruebas" class="card">
+        <h2>4.6 Pruebas realizadas</h2>
+        <p><strong>Herramientas:</strong> `run_test`, `test/generate_test.py`, `test/emergencias_test.py`.</p>
+        <p><strong>Casos:</strong> archivos de emergencias (ráfagas), archivos grandes (estrés), casos inválidos para validación de parser.</p>
+        <p><strong>Comportamiento observado:</strong> prioridad de emergencias funciona; con entradas muy grandes la implementación basada en barridos lineales muestra penalizaciones de rendimiento.</p>
+      </section>
+
+      <section id="conclusiones" class="card">
+        <h2>4.7 Conclusiones</h2>
+        <ul>
+          <li>Implementar la simulación en C aporta aprendizaje en estructuras y manejo de memoria.</li>
+          <li>Dificultades: mantener orden en colas y gestionar reinserciones; solución: `VehiculoConEstado.activo` y reinserciones controladas.</li>
+          <li>Correcciones recomendadas: revisar `procesarVehiculo` por `fall-through` en `case 6`, añadir tests unitarios y modularizar el código.</li>
+        </ul>
+      </section>
+
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Generado automáticamente desde el repositorio — ver `TESTS.md` para ejecutar pruebas.</p>
+    </div>
+  </footer>
+</body>
+</html>
