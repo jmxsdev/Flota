@@ -592,8 +592,8 @@ int procesarArchivoCompleto(const char *nombre_archivo,
         contador_vehiculos++;
         
         // Opcional: imprimir progreso
-        printf("Vehículo %d leído: %s a las %d\n", 
-               contador_vehiculos, v.placa, v.hora_llegada);
+        //printf("Vehículo %d leído: %s a las %d\n", 
+        //       contador_vehiculos, v.placa, v.hora_llegada);
     }
     
     fclose(archivo);
@@ -960,7 +960,7 @@ void iniciarSimulacion(FILE *in, struct Simulacion *sim) {
             if (sim->tiempo_carga_restante > 0) {
                 sim->tiempo_carga_restante--;
                 if (sim->tiempo_carga_restante > 0) {
-                    printf("⏳ Cargando... tiempo restante: %d min\n", sim->tiempo_carga_restante);
+                    //printf("⏳ Cargando... tiempo restante: %d min\n", sim->tiempo_carga_restante);
                 }
             }
             // Si no está cargando actualmente, intentar cargar un vehículo
@@ -1089,9 +1089,9 @@ void actualizarColaEsperaDesdeOrigenes(struct Simulacion *sim, int ferry_idx) {
 
     
     if (movidos > 0) {
-        printf("  🔄 Movidos %d vehículos a cola de espera (Ferry %s)\n", 
+        /*printf("  🔄 Movidos %d vehículos a cola de espera (Ferry %s)\n", 
                movidos,
-               tipo_ferry_actual == TIPO_EXPRESS ? "Express" : "Tradicional");
+               tipo_ferry_actual == TIPO_EXPRESS ? "Express" : "Tradicional");*/
     }
 }
 
@@ -1380,11 +1380,11 @@ void cargarVehiculoDesdeEspera(struct Simulacion *sim, int ferry_idx) {
         sim->cola_espera.frente = (sim->cola_espera.frente + 1) % MAX_VEHICULOS_COLA;
         sim->cola_espera.cantidad--;
         
-        printf("  ✅ CARGADO: %s en %s %s\n", 
+        /*printf("  ✅ CARGADO: %s en %s %s\n", 
                ve_primero->datos.placa, 
                sim->ferrys[ferry_idx].nombre,
                ve_primero->datos.es_emergencia ? "(EMERGENCIA)" : "");
-        
+        */
         // Establecer tiempo de carga
         sim->tiempo_carga_restante = TIEMPO_DE_CARGA_VEHICULO;
     } 
@@ -1478,7 +1478,7 @@ void cargarVehiculoDesdeEspera(struct Simulacion *sim, int ferry_idx) {
         }
         
         if (num_bajados > 0) {
-            printf("  🔄 Reinsertados %d vehículos en cola total\n", num_bajados);
+           // printf("  🔄 Reinsertados %d vehículos en cola total\n", num_bajados);
         }
     }
 }
@@ -1592,8 +1592,8 @@ int reinsertar_vehiculo(struct Simulacion *sim, struct Vehiculo vehiculo, int or
                     sim->cola_espera.cantidad--;
                     
                     sim->tiempo_carga_restante = TIEMPO_DE_CARGA_VEHICULO;
-                    printf("  ✅ CARGADO DIRECTO: %s en %s\n", 
-                           v_estado->datos.placa, ferry->nombre);
+                    //printf("  ✅ CARGADO DIRECTO: %s en %s\n", 
+                    //       v_estado->datos.placa, ferry->nombre);
                     return 0;  // Seguir cargando
                 }
                 indice_actual = (indice_actual + 1) % MAX_VEHICULOS_COLA;
